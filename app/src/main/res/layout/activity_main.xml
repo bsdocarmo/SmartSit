@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
-    tools:context="com.habitus.smartsit.MainActivity">
+    android:padding="8dp"
+    tools:context="com.habitus.smartsit.activities.MainActivity">
 
-    <ImageView
-        android:id="@+id/sensor"
+    <Button
+        android:id="@+id/update"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="update"
+        android:textSize="25sp"
+        android:onClick="update"/>
+
+    <GridView
+        android:id="@+id/am_sensor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/sensor"/>
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:padding="8dp"
+        android:gravity="center"
+        android:layout_centerInParent="true"
+        android:background="@drawable/edges"/>
 
-</LinearLayout>
+</RelativeLayout>
