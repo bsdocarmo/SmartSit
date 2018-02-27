@@ -11,19 +11,19 @@
         android:id="@+id/update"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="update"
-        android:textSize="25sp"
-        android:onClick="update"/>
+        android:onClick="update"
+        android:text="Analisar"
+        android:textSize="25sp" />
 
     <GridView
         android:id="@+id/am_sensor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:padding="8dp"
-        android:gravity="center"
         android:layout_centerInParent="true"
-        android:background="@drawable/edges"/>
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/edges"
+        android:gravity="center"
+        android:padding="8dp" />
 
 </RelativeLayout>

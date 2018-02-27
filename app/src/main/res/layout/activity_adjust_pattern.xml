@@ -12,33 +12,37 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:text="Vamos calibrar a sua Sit1"
-        android:textSize="22sp"
-        android:textColor="#000000" />
+        android:textColor="#000000"
+        android:textSize="22sp" />
 
     <GridView
         android:id="@+id/adp_sensor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:padding="8dp"
-        android:gravity="center"
         android:layout_centerInParent="true"
-        android:background="@drawable/edges"/>
-
-    <ProgressBar
-        android:id="@+id/progressBar1"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:progressDrawable="@drawable/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/edges"
+        android:gravity="center"
+        android:padding="8dp" />
 
     <Button
+        android:id="@+id/confirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:onClick="confirm"
         android:text="Confirm" />
+
+    <Button
+        android:id="@+id/prosseguir"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:onClick="prosseguir"
+        android:text="Prosseguir"
+        android:visibility="gone" />
 
 </RelativeLayout>

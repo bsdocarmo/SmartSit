@@ -25,10 +25,13 @@ import android.os.Message;
 import android.util.Log;
 
 import com.habitus.smartsit.activities.MainActivity;
+import com.habitus.smartsit.postureRecognize.StandardPosture;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -37,43 +40,115 @@ import java.util.UUID;
 
 public class BluetoothCommandService {
 
-    // Debugging
-    private static final String TAG = "BluetoothCommandService";
-    private static final boolean D = true;
-
-    // Unique UUID for this application
-    private static final String MY_UUID = "00001101-0000-1000-8000-00805F9B34FB";
-//    private static final UUID MY_UUID = UUID.fromString("04c6093b-0000-1000-8000-00805f9b34fb");
-
-
-    // Member fields
-    private final BluetoothAdapter mAdapter;
-    private final Handler mHandler;
-    private ConnectThread mConnectThread;
-    private ConnectedThread mConnectedThread;
-    private int mState;
-    private BluetoothDevice mSavedDevice;
-//    private int mConnectionLostCount;
-
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
     public static final int STATE_LISTEN = 1;     // now listening for incoming connections
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
+    //    private static final UUID MY_UUID = UUID.fromString("04c6093b-0000-1000-8000-00805f9b34fb");
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
-
+    // Debugging
+    private static final String TAG = "BluetoothCommandService";
+    private static final boolean D = true;
+    // Unique UUID for this application
+    private static final String MY_UUID = "00001101-0000-1000-8000-00805F9B34FB";
     // Constants that indicate command to computer
     private static final int EXIT_CMD = -1;
+    private static volatile BluetoothCommandService bluetoothCommandService = new BluetoothCommandService();
+    //    private int mConnectionLostCount;
+    // Member fields
+    private BluetoothAdapter mAdapter;
+    private Handler mHandler;
+    private ConnectThread mConnectThread;
+    private ConnectedThread mConnectedThread;
+    private int mState;
+    private BluetoothDevice mSavedDevice;
+    private Bluetooth bt;
 
-    /**
-     * Constructor. Prepares a new BluetoothChat session.
-     * @param context  The UI Activity Context
-     * @param handler  A Handler to send messages back to the UI Activity
-     */
-    public BluetoothCommandService(Context context, Handler handler) {
+    //private constructor.
+    private BluetoothCommandService() {
+
+        //Prevent form the reflection api.
+        if (bluetoothCommandService != null) {
+            throw new RuntimeException("Use getInstance() method to get the single instance of this class.");
+        }
+    }
+
+    public static BluetoothCommandService getInstance() {
+        if (bluetoothCommandService == null) { //if there is no instance available... create new one
+            synchronized (BluetoothCommandService.class) {
+                if (bluetoothCommandService == null)
+                    bluetoothCommandService = new BluetoothCommandService();
+            }
+        }
+
+        return bluetoothCommandService;
+    }
+
+    public void setContext(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         //mConnectionLostCount = 0;
         mHandler = handler;
+    }
+
+    public void checkBonded() {
+        // Get a set of currently paired devices
+        Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
+
+        // If there are paired devices, add each one to the ArrayAdapter
+        if (pairedDevices.size() > 0) {
+//            findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
+            for (BluetoothDevice device : pairedDevices) {
+                Log.d(TAG, "onCreate: BLUETOOTH   " + device.getName() + "-----" + device.getAddress());
+//              Bluetooth adapter name
+                if (device.getName().contains("HC-05") || device.getName().contains("OCEAN")) {
+                    Log.d(TAG, "onCreate: BLUETOOTH is CONNECTED ");
+                    bt = new Bluetooth(device.getName(), device.getAddress(), Arrays.toString(device.getUuids()));
+                }
+//                mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+            }
+        } else {
+            Log.d(TAG, "onCreate: BLUETOOTH IS NOT CONNECTED");
+//            String noDevices = getResources().getText(R.string.none_paired).toString();
+//            mPairedDevicesArrayAdapter.add(noDevices);
+        }
+    }
+
+    /**
+     * Check Bluetooth state.
+     */
+    public void checkBTState() {
+//      Check for Bluetooth support and then check to make sure it is turned on
+//      Emulator doesn't support Bluetooth and will return null
+        if (mAdapter == null) {
+//            Utilities.toast(this, "Bluetooth not support");
+        } else {
+            if (mAdapter.isEnabled()) {
+                Log.d(TAG, "Bluetooth ON");
+//                ensureDiscoverable();
+//                if (mCommandService == null) {
+//                    setupCommand();
+//
+//                }
+                checkBonded();
+                if (bt != null) {
+//                  Get the Bluetooth Device object
+                    Log.d(TAG, "checkBTState: BLUETOOTH - MAC CHECKBTSTATE " + bt.getMAC());
+                    BluetoothDevice device = mAdapter.getRemoteDevice(bt.getMAC());
+//                  Attempt to connect to the device
+                    Log.d(TAG, "checkBTState:  BLUETOOTH  " + device.toString());
+                    connect(device);
+//                    mCommandService.connect(device);
+                }
+            }
+        }
+    }
+
+    /**
+     * Return the current connection state.
+     */
+    public synchronized int getState() {
+        return mState;
     }
 
     /**
@@ -86,12 +161,6 @@ public class BluetoothCommandService {
 
         // Give the new state to the Handler so the UI Activity can update
         mHandler.obtainMessage(MainActivity.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
-    }
-
-    /**
-     * Return the current connection state. */
-    public synchronized int getState() {
-        return mState;
     }
 
     /**
@@ -344,8 +413,6 @@ public class BluetoothCommandService {
             // Keep listening to the InputStream while connected
             while (true) {
 
-
-
                 try {
                     byte[] buffer = new byte[1024];
                     int bytes;
@@ -365,7 +432,13 @@ public class BluetoothCommandService {
 //                     */
 ////                    toMainActivity(Arrays.copyOfRange(buffer, 0, bytesRead-1));
                     String strIncom = new String(buffer, "UTF8");
+
+                    StandardPosture standardPosture = StandardPosture.getInstance();
+                    float[][] standardMat = standardPosture.getStandardMat();
+
+
                     Log.d(TAG, "buffer - :>>>  " + strIncom);
+                    Log.d("TAG2", standardMat[0][0] + "     " + standardMat[0][1] + "     " + standardMat[1][0] + "     " + standardMat[1][1]);
 //                    mHandler.obtainMessage(MainActivity.RECEIVE_MESSAGE, 0, -1, Arrays.copyOfRange(buffer, 0, bytesRead-1)).sendToTarget();
 
 //                    // Read from the InputStream
